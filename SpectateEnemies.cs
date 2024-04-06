@@ -18,6 +18,29 @@ namespace ContentSpectateEnemies
         public bool SpectatingEnemies = false;
         public float ZoomLevel = 1f;
 
+        private static MethodInfo start = null;
+
+        private readonly GUIStyle centerStyle = new GUIStyle()
+        {
+            fontSize = 50,
+            normal = new GUIStyleState()
+            {
+                textColor = Color.red
+            },
+            alignment = TextAnchor.UpperCenter
+        };
+
+        private readonly GUIStyle rightStyle = new GUIStyle()
+        {
+            fontSize = 30,
+            normal = new GUIStyleState()
+            {
+                textColor = Color.white
+            },
+            alignment = TextAnchor.UpperRight,
+
+        };
+
         private void Awake()
         {
             if (Instance != null)
@@ -29,19 +52,31 @@ namespace ContentSpectateEnemies
             lookDirection = AccessTools.Field(typeof(Spectate), "lookDirection");
             look = AccessTools.Method(typeof(Spectate), "Look");
             switching = AccessTools.Method(typeof(Spectate), "Switching");
+            start = AccessTools.Method(typeof(Spectate), "StartSpectate");
+
             DontDestroyOnLoad(gameObject);
         }
 
         private void OnGUI()
         {
-            GUI.color = Color.red;
-            if (SpectatingEnemies) {
-                Bot current = BotHandler.instance.bots.ElementAtOrDefault(SpectatedEnemyIndex);
-                if (current == null)
+            if (Spectate.spectating)
+            {
+                if (SpectatingEnemies)
                 {
-                    return;
+                    Bot current = BotHandler.instance.bots.ElementAtOrDefault(SpectatedEnemyIndex);
+                    if (current == null)
+                    {
+                        return;
+                    }
+                    GUI.Label(new Rect((Screen.width / 2) - 150, 20, 300, 100), string.Format("Spectating: {0}", current.transform.parent.name.Replace("(Clone)", "")), centerStyle);
                 }
-                GUI.Label(new Rect(Screen.width / 2, 20, 200, 100), $"Spectating: {current.name}");
+                else if (Player.observedPlayer != null)
+                {
+                    // why
+                    string playerName = Player.observedPlayer.refs.view.Owner.NickName;
+                    GUI.Label(new Rect((Screen.width / 2) - 150, 20, 300, 100), string.Format("Spectating: {0}", playerName), centerStyle);
+                }
+                GUI.Label(new Rect(Screen.width - 320, 20, 300, 300), $"Controls:\n[E] Spectate {(SpectatingEnemies ? "Players" : "Enemies")}\n[F] Toggle Light\n[A] Previous\n[D] Next", rightStyle);
             }
         }
 
@@ -66,7 +101,22 @@ namespace ContentSpectateEnemies
                         }
                     }
                 }
+                if (Input.GetKeyDown(KeyCode.F))
+                {
+                    Light light = MainCamera.instance.GetComponent<Light>();
+                    light.enabled = !light.enabled;
+                }
             }
+
+            if (Input.GetKeyDown(KeyCode.K))
+            {
+                start.Invoke(FindObjectOfType<Spectate>(), null);
+            }
+
+            /*
+            ZoomLevel -= Input.mouseScrollDelta.y * 0.1f;
+            ZoomLevel = Mathf.Clamp(ZoomLevel, 0.1f, 10f);
+            */
         }
 
         // rewrite Spectate.DoSpectate with our own code
@@ -91,6 +141,7 @@ namespace ContentSpectateEnemies
             }
             spectate.transform.rotation = Quaternion.LookRotation((Vector3)lookDirection.GetValue(spectate));
             spectate.transform.position = currentEnemy.centerTransform.position + Vector3.up * 0.75f;
+
             Vector3 vector = spectate.transform.position + spectate.transform.forward * -3f;
             RaycastHit hit = HelperFunctions.LineCheck(spectate.transform.position, vector, HelperFunctions.LayerType.TerrainProp, 0f);
             if (hit.transform)
@@ -200,6 +251,24 @@ namespace ContentSpectateEnemies
         }
     }
 
+    [HarmonyPatch(typeof(RoundSpawner), "Start")]
+    internal class RoundSpawner_Start
+    {
+        private static void Postfix()
+        {
+            if (MainCamera.instance.gameObject.GetComponent<Light>() == null)
+            {
+                Light light = MainCamera.instance.gameObject.AddComponent<Light>();
+                light.color = Color.white;
+                light.type = LightType.Point;
+                light.shadows = LightShadows.None;
+                light.range = 100f;
+                light.intensity = 8f;
+                light.enabled = false;
+            }
+        }
+    }
+ 
     [HarmonyPatch(typeof(MainMenuHandler), "Awake")]
     internal class MainMenuHandler_Awake
     {
@@ -208,8 +277,26 @@ namespace ContentSpectateEnemies
             if (SpectateEnemies.Instance == null)
             {
                 GameObject obj = new GameObject("SpectateEnemiesObject");
-                SpectateEnemies spec = obj.AddComponent<SpectateEnemies>();
+                obj.AddComponent<SpectateEnemies>();
             }
         }
     }
+
+    [HarmonyPatch(typeof(Spectate), "StopSpectate")]
+    internal class Spectate_Stop
+    {
+        private static bool Prefix()
+        {
+            return false;
+        }
+        private static void Postfix()
+        {
+            Light light = MainCamera.instance.gameObject.GetComponent<Light>();
+            if (light != null)
+            {
+                light.enabled = false;
+            }
+        }
+    }
+   
 }

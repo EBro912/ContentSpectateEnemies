@@ -3,7 +3,7 @@ using HarmonyLib;
 
 namespace ContentSpectateEnemies
 {
-    [BepInPlugin("SpectateEnemies", "SpectateEnemies", "1.0.0")]
+    [BepInPlugin("SpectateEnemies", "SpectateEnemies", "1.1.0")]
     public class Plugin : BaseUnityPlugin
     {
         private Harmony harmony;

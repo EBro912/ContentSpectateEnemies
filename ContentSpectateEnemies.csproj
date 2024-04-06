@@ -18,6 +18,12 @@
     <Reference Include="BepInEx.Harmony">
       <HintPath>F:\SteamLibrary\steamapps\common\Content Warning\BepInEx\core\BepInEx.Harmony.dll</HintPath>
     </Reference>
+    <Reference Include="PhotonRealtime">
+      <HintPath>F:\SteamLibrary\steamapps\common\Content Warning\Content Warning_Data\Managed\PhotonRealtime.dll</HintPath>
+    </Reference>
+    <Reference Include="PhotonUnityNetworking">
+      <HintPath>F:\SteamLibrary\steamapps\common\Content Warning\Content Warning_Data\Managed\PhotonUnityNetworking.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>F:\SteamLibrary\steamapps\common\Content Warning\Content Warning_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
