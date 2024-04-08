@@ -108,10 +108,10 @@ namespace ContentSpectateEnemies
                 }
             }
 
-            if (Input.GetKeyDown(KeyCode.K))
+            /*if (Input.GetKeyDown(KeyCode.K))
             {
                 start.Invoke(FindObjectOfType<Spectate>(), null);
-            }
+            }*/
 
             /*
             ZoomLevel -= Input.mouseScrollDelta.y * 0.1f;
@@ -123,7 +123,7 @@ namespace ContentSpectateEnemies
         // TODO: do this in a better way
         public void DoSpectate(Spectate spectate)
         {
-            if (Player.localPlayer.data.dead)
+            if (!Player.localPlayer.data.dead)
             {
                 SpectatingEnemies = false;
                 return;
@@ -285,10 +285,10 @@ namespace ContentSpectateEnemies
     [HarmonyPatch(typeof(Spectate), "StopSpectate")]
     internal class Spectate_Stop
     {
-        private static bool Prefix()
+        /*private static bool Prefix()
         {
             return false;
-        }
+        }*/
         private static void Postfix()
         {
             Light light = MainCamera.instance.gameObject.GetComponent<Light>();
